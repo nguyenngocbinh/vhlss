@@ -1,6 +1,8 @@
+# Author: Nguyen ngoc Binh
+# First: 18/10/2019
+
 library(rio)
 library(tidyverse)
-library(data.table)
 
 # Support functions
 # Quantile cut function
@@ -15,7 +17,7 @@ qcut <- function(x, nbr_bin = 5){
   
 }
 
-source('D:/VHLSS/R/labels.R')
+source('D:/R/VHLSS/labels.R')
 
 # Import all file 
 file_vhlss_2016 <- Sys.glob("vhlss_2016/*.dta")
@@ -58,14 +60,15 @@ ho %<>%
          av_exp_healthcare=hhexp_healthcare/hhsize) 
 
 # Ghep các mục thành viên hộ
-thanh_vien <- dt$muc1a %>% 
+dt_join <- dt$muc1a %>% 
   inner_join(dt$muc2ab) %>% 
   inner_join(dt$muc4a) %>% 
+  inner_join(dt$muc2x) %>% 
   inner_join(ho) %>% 
-  inner_join(dt$wt16) %>% 
-  inner_join(dt$muc2x) 
+  inner_join(dt$wt16)
 
-tao_bien <- thanh_vien %>% 
+
+thanh_vien <- dt_join %>%
   group_by(tinh, huyen, xa, diaban, hoso) %>% 
   mutate(educex_2 = sum(m2xc11k)) %>% 
   ungroup() %>% 
@@ -98,10 +101,10 @@ tao_bien <- thanh_vien %>%
          hhincome = thunhap,
          monthly_wageA = m4ac10,
          yearly_wageA = m4ac11 + m4ac12a + m4ac12b,
+         allowance = m4ac31a + m4ac31b + m4ac31c + m4ac31d + m4ac31e,
          yearly_wage = m4ac11 + m4ac12a + m4ac12b + 
            m4ac26 + m4ac27a + m4ac27b + 
-           m4ac29 + m4ac31a + m4ac31b + m4ac31c + m4ac31d + m4ac31e,
-         allowance = m4ac31a + m4ac31b + m4ac31c + m4ac31d + m4ac31e,
+           m4ac29 + allowance,
          hhwage = m4atn,
          # Trình độ học vấn cao nhất
          highest_degree = case_when(m2ac2a == 0 ~ 'Không bằng cấp',
@@ -183,4 +186,3 @@ tao_bien <- thanh_vien %>%
          bhxh = case_when(m4ac13c == 1 ~ 'Có', m4ac13c == 2 ~ 'Không', TRUE ~ 'Khác')) %>% 
   mutate(headsex = case_when(quanhe =='Chủ hộ' & gender == 'Nam' ~ 'Chủ hộ Nam',
                              quanhe =='Chủ hộ' & gender == 'Nữ' ~ 'Chủ hộ nữ'))
-
