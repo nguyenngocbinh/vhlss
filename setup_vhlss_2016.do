@@ -1,29 +1,29 @@
 /*
 Author: Nguyen ngoc Binh
-Organization:
-First: 29/4/2018
+Organization:ILSSA
+First: 29/3/2016
 Update: 
 **************************************************************************/
 clear all
 set mem 500m
 set more off
 
-global data16  "F:\GoogleDrive\Data\VHLSS 2016"
-global temp  "F:\data\temp\VHLSS2016"               // change directory here
+global data14  "F:\GoogleDrive\Data\VHLSS2014"
+global temp  "F:\data\temp\vhlss2014"               // change directory here
 global id tinh huyen xa diaban hoso matv
 global idh tinh huyen xa diaban hoso
 
-use "$data16\Ho1.dta",clear
+use "$data14\Ho1.dta",clear
 local i=2
 while `i'< 5 {
-	merge 1:1 $idh using "$data16\Ho`i'.dta"
+	merge 1:1 $idh using "$data14\Ho`i'.dta"
 	keep if _merge == 3
 	drop _merge
 	sort $idh
 local i=`i'+1
 }
 sort $idh
-merge 1:1 $idh using "$data16\muc7.dta"
+merge 1:1 $idh using "$data14\muc7.dta"
 	keep if _merge == 3
 	drop _merge
 	
@@ -55,12 +55,12 @@ gen av_exp_healthcare=hhexp_healthcare/hhsize
 compress
 save $temp\ho.dta,replace
 
-use "$data16\muc1a.dta", clear
+use "$data14\muc1a.dta", clear
 // Tr?nh ?? h?c v?n
-merge 1:1 $id using  "$data16\muc2AB.dta" 
+merge 1:1 $id using  "$data14\muc2a.dta" 
 keep if _merge ==3
 drop _merge
-merge 1:1 $id using  "$data16\muc4a.dta" 
+merge 1:1 $id using  "$data14\muc4a.dta" 
 drop _merge
 
 // ??c ?i?m d?n t?c, th?nh th? n?ng th?n
@@ -68,11 +68,11 @@ merge m:1 $idh using  $temp\ho.dta
 keep if _merge == 3
 drop _merge
 
-merge m:1 tinh huyen xa diaban using  "$data16\wt16.dta"
+merge m:1 tinh huyen xa diaban using  "$data14\wt2014.dta"
 keep if _merge == 3
 drop _merge
 
-merge 1:1 $id using "$data16\Muc2x.dta "
+merge 1:1 $id using "$data14\Muc2x.dta "
 keep if _merge == 3
 drop _merge
 egen educex_2 = sum(m2xc11k), by ($idh)
@@ -112,12 +112,12 @@ label define quanhe
 */
 
 gen hhincome = thunhap
-gen monthly_wageA = m4ac10 // Ti?n l??ng TH?NG t? c?ng vi?c ch?nh
-egen yearly_wageA = rsum(m4ac11 m4ac12a m4ac12b) // Ti?n l??ng N?M t? c?ng vi?c ch?nh 
-egen yearly_wage = rsum(m4ac11 m4ac12a m4ac12b m4ac26 m4ac27a m4ac27b m4ac29 m4ac31a m4ac31b m4ac31c m4ac31d m4ac31e) // Thu nh?p t? t?t c? c?c c?ng vi?c
+gen monthly_wageA = m4ac10
+egen yearly_wageA = rsum(m4ac11 m4ac12a m4ac12b)
+egen yearly_wage = rsum(m4ac11 m4ac12a m4ac12b m4ac23 m4ac24a m4ac24b m4ac26 m4ac28a m4ac28b m4ac28c m4ac28d m4ac28e)
 recode yearly_wage (0=.)
 
-egen allowance = rsum( m4ac31a m4ac31b m4ac31c m4ac31d m4ac31e)
+egen allowance = rsum( m4ac28a m4ac28b m4ac28c m4ac28d m4ac28e)
 gen hhwage = m4atn
 
 gen highest_degree =  m2ac2a
@@ -349,5 +349,5 @@ label var educex_2 "Chi ti?u gi?o d?c"
 order $list_all $id weight
 do "F:\dropbox\dofile\labels\label_dantoc.do"
 quietly compress
-save "$temp\VHLSS2016.dta", replace
+save "$temp\vhlss2014.dta", replace
 
