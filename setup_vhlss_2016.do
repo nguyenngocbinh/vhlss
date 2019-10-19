@@ -1,29 +1,33 @@
 /*
 Author: Nguyen ngoc Binh
 Organization:ILSSA
-Last update: 30/03/2016
+Last update: 06/05/2018
 **************************************************************************/
 clear all
 set mem 500m
 set more off
-global data10  "F:\GoogleDrive\Data\VHLSS2010\Data_9300ho\"
-global temp  "F:\data\temp\vhlss2010"               // change directory here
-global id "tinh huyen xa diaban hoso matv"
-global idh "tinh huyen xa diaban hoso"
+global data08  "F:\GoogleDrive\Data\VHLSS2008"
+global temp  "F:\Data\temp\vhlss2008"               // change directory here
+global id tinh huyen xa diaban hoso matv
+global idh tinh huyen xa diaban hoso
 
-use "$data10\ho11.dta",clear
+use $data08\ho11.dta,clear
 local i=2
-while `i'< 6 {
-	merge 1:1 $idh using "$data10\ho1`i'.dta"
+while `i'< 7 {
+	merge 1:1 $idh using $data08\ho1`i'.dta
 	keep if _merge == 3
 	drop _merge
 	sort $idh
 local i=`i'+1
 }
 sort $idh
-merge 1:1 $idh using "$data10\muc7.dta"
+merge 1:1 $idh using $data08\muc7.dta
 	keep if _merge == 3
 	drop _merge
+merge 1:1 $idh using  $data08\ho.dta 
+	keep if _merge == 3
+	drop _merge
+	
 gen hhsize = tsnguoi
 *============ Expenditure ==========
 * Chi tieu giao duc 
@@ -39,54 +43,43 @@ recode hhexp_nonfood (0=.)
 * Chi khac cua ho
 gen hhexp_other=m5b3ct
 * Chi ?? d?ng l?u b?n
-gen hhexp_durables=m6c7
+egen hhexp_durables=rsum(m6bc7)
+* Chi tai san co dinh + khoang khac khong tinh vao chi tieu
+egen hhexp_assets=rsum(m5b4c m6ac8 m6ac9)
+* Chi nha o
+egen hhexp_housing = rsum(m7c21 m7c23a m7c24)
 * Chi thuong xuyen
-gen hhexp_daily=m7c23
+gen hhexp_daily=m7c40
 *Tong chi tieu cua ho gia dinh
 egen hhexpenditure = rsum(hhexp_edu hhexp_healthcare hhexp_food hhexp_nonfood hhexp_other hhexp_durables hhexp_daily)
 recode hhexpenditure (0=.)
 *Chi tieu binh quan cua ho gia dinh1 th?ng
-gen  chibq=hhexpenditure/tsnguoi/12
+* gen  chibq=hhexpenditure/tsnguoi/12
 *Chi tieu cho y te binh quan dau nguoi 1 n?m
 gen av_exp_healthcare=hhexp_healthcare/hhsize
-
 quiet compress
-save "$temp\ho.dta",replace
+save $temp\ho.dta,replace
 
-* Gh?p m?c 4a v?i nhau
-use "$data10\muc4a1.dta",clear
-local i=2
-while `i'< 6 {
-	merge 1:1 $id using "$data10\muc4a`i'.dta"
-	keep if _merge == 3
-	drop _merge
-local i=`i'+1
-}
-save "$temp\muc4a.dta",replace
-
-use "$data10\muc1a.dta" , clear
+use $data08\muc123a.dta , clear
 // ??c ?i?m ngh? nghi?p
-merge 1:1 $id using  "$temp\muc4a.dta"
-keep if _merge ==3
-drop _merge
-// Tr?nh ?? h?c v?n
-merge 1:1 $id using  "$data10\muc2a1.dta" 
-keep if _merge ==3
+merge 1:1 $id using  $data08\muc4a.dta
+// Giu lai tat ca cac quan sat
 drop _merge
 // ??c ?i?m d?n t?c, th?nh th? n?ng th?n
-merge m:1 $idh using  "$temp\ho.dta" 
+merge m:1 $idh using  $temp\ho.dta 
+keep if _merge == 3
+drop _merge
+// L?y th?m s? li?u chi ti?u
+merge m:1 tinh huyen xa diaban hoso using  $data08\hhexpe08.dta
 keep if _merge == 3
 drop _merge
 // L?y th?m quy?n s?
-merge m:1 tinh huyen xa diaban using  "$data10\weight10.dta" 
-keep if _merge == 3
+merge m:1 tinh huyen xa diaban using  $data08\weight08new4.dta
+keep  if _merge == 3
 drop _merge
-merge 1:1 $id using "$data10\muc2_QX_cau9_11.dta" 
-keep if _merge == 3
-drop _merge
-egen educex_2 = sum( m2ac11k), by ($idh)
 // Gi?i t?nh
 gen gender = m1ac2
+recode gender (. = 99)
 label define gender 1"Nam" 2 "N?" 99 "Missing"
 // Tu?i
 gen age = m1ac5
@@ -103,8 +96,11 @@ label define marital_status
 4 " Ly h?n/ ly th?n"
 99 "Mising";
 #delimit cr
+
 // Quan h? v?i ch? h?
 gen quanhe =  m1ac3
+recode quanhe (9=7)
+
 #delimit;
 label define quanhe
 1 "Ch? h?"
@@ -117,39 +113,28 @@ label define quanhe
 #delimit cr
 
 // Quy m? h?
-/* by tinh huyen xa diaban hoso, sort : egen float hhsize = count(matv)
-*/
+* by tinh huyen xa diaban hoso, sort : egen float hhsize = count(matv)
 
 gen hhincome = thunhap
-gen monthly_wageA = m4ac10
-egen yearly_wageA = rsum(m4ac11 m4ac12a m4ac12b)
-egen wage = rsum(m4ac11 m4ac12a m4ac12b m4ac23 m4ac24a m4ac24b m4ac26 m4ac28a m4ac28b m4ac28c m4ac28d m4ac28e)
+egen yearly_wageA = rsum( m4ac11  m4ac12f)	// tien luong tu cong viec chinh
+egen wage = rsum( m4ac11  m4ac12f m4ac21 m4ac22f m4ac25 )
 gen hhwage = m4atn
 
-gen highest_degree =  m2ac2a
-gen train =  m2ac2b
+// B?ng c?p cao nh?t gi?o d?c ph? th?ng
+gen highest_degree =  m2ac3a
+recode highest_degree (-1 =0)
+// B?ng c?p ngh?
+gen train =  m2ac3b
 replace train =.  if age <=7
-gen dihoc = 100 if m2ac4 ==1 | 	m2ac4 ==2	// T? l? ?i h?c
+gen dihoc = 100 if m2ac5 ==1 | 	m2ac5 ==2	// T? l? ?i h?c
 recode dihoc (.=0)
-gen degree_now = m2ac6
-gen edu_now = m2ac7
-*
-gen train1 = m2ac2a
-replace train1 = m2ac2b if m2ac2b > m2ac2a & m2ac2b !=.
-recode train1 0/3=1 4=2 5/6=3 7/8=4 9/11=5 12=1 .=99
-#delimit;
-label define train1 
-1	"Kh?ng c? CMKT"
-2	"S? c?p ngh?"
-3	"Trung c?p"
-4	"Cao ??ng"
-5	"?h/tr?n ?h"
-99	"Missing" ;
-#delimit cr
+gen degree_now = m2ac8
+
 // S? n?m ?i h?c
 destring m2ac1, replace 
 gen edu = m2ac1 		//  h?c h?t l?p
-gen yearschool = edu		// S? n?m ?i h?c
+gen highest_edu = edu		// S? n?m ?i h?c
+gen yearschool = edu
 replace yearschool = yearschool + 0.5 if train ==4
 replace yearschool = yearschool + 1.5 if train ==5
 replace yearschool = yearschool + 2 if train ==6
@@ -181,6 +166,7 @@ label define train
 6 "THCN"
 7 "Cao ??ng ngh?"
 99 "Missing";
+#delimit cr
 
 #delimit;
 label define degree_now
@@ -200,24 +186,35 @@ label define degree_now
 99 "Missing";  
 #delimit cr
 
+// m? t?nh m?i ko c? H? T?y
+gen tinh_old = tinh
+recode tinh_old (105 = 101)
+merge m:1 tinh_old using "F:\Dropbox\temp\id\id_tinh.dta"
+keep if _merge ==3
+drop _merge
+
 // T?o bi?n v?ng kinh t?
 do "F:\Dropbox\dofile\labels\region6.do"
 
 // Ng?nh c?p 2
-gen indus2 = m4ac4
+gen indus2 = m4ac5
 // Ng?nh c?p 1
-
-// C? 3 ng?nh m?i??u n?m trong nh?m ng?nh n?ng nghi?p
-gen indus1=.
-replace indus1 = 1 if indus2 ==110
-replace indus1 = 1 if indus2 ==140
-replace indus1 = 1 if indus2 ==160
+gen indus1 =.
 do "F:\Dropbox\dofile\labels\indus1.do"
-gen occup2 =  m4ac3
+
+gen occup2 =  m4ac4
+// Ngh? c?p 1
 do "F:\Dropbox\dofile\labels\occup1.do"
 
-// Lo?i h?nh kinh t?
-gen economic_sector = m4ac8a
+// H?nh th?c s? h?u
+gen economic_sector = .
+replace economic_sector = 1 if m4ac10a == 2
+replace economic_sector = 2 if m4ac10a == 1 | m4ac10a == 3
+replace economic_sector = 3 if m4ac10a == 5
+replace economic_sector = 4 if m4ac10a == 6
+replace economic_sector = 5 if m4ac10a == 4
+replace economic_sector = 6 if m4ac10a == 7
+
 #delimit;
 label define economic_sector
 1	"H? c? nh?n"
@@ -229,37 +226,29 @@ label define economic_sector
 99	"Missing" ;
 #delimit cr
 
-gen weight = wt9
-
 gen lamviec = .
 recode lamviec . = 1 if m4ac1a ==1
 recode lamviec .= 2 if m4ac1b ==1
 recode lamviec .= 3 if m4ac1c ==1
-
 label define lamviec 1 "C? ti?n c?ng, ti?n l??ng" 2 "T? l?m n?ng, l?m th?y s?n" 3 "T? l?m kinh doanh, d?ch v?" 99 "Missing"
 
+
+gen weight = wt9
+
 * Chu?n ngh?o 2006 - 2010 cho th?nh th? n?ng th?n l?n l??t: 3120 v? 2400 theo n?m
-* Chu?n ngh?o 2011 - 2015 cho th?nh th? n?ng th?n l?n l??t: 6000 v? 4800 theo n?m
-gen pov_lines = 450 if ttnt ==1		// Chu?n ngh?o ??n v? ngh?n ??ng theo th?ng
-recode pov_lines (. = 360) if ttnt ==2 
+* Theo chu?n ngh?o 2011 - 2015
+gen pov_lines = 370 if ttnt ==1		// Chu?n ngh?o ??n v? ngh?n ??ng theo th?ng
+recode pov_lines (. = 290) if ttnt ==2 
 
-/* T? l? ngh?o chu?n -> kh?ng d?ng
+// T? l? ngh?o c? c?p nh?t tr??t gi?
 gen tyle_ngheo = 0
-replace tyle_ngheo = 100 if thubq<=450 & ttnt==1
-replace tyle_ngheo = 100 if thubq<=360 & ttnt==2
-*/
-// T? l? ngh?o ?? ?i?u ch?nh t?nh theo chu?n ngh?o 2010
-gen tyle_ngheo = 0
-replace tyle_ngheo = 100 if thubq<=561 & ttnt==1
-replace tyle_ngheo = 100 if thubq<=405 & ttnt==2
+replace tyle_ngheo = 100 if thubq<465 & ttnt==1
+replace tyle_ngheo = 100 if thubq<345 & ttnt==2
 
-gen tyle_ngheo_new = 0
-replace tyle_ngheo_new = 100 if thubq<=660 & ttnt==1
-replace tyle_ngheo_new = 100 if thubq<=504 & ttnt==2
 // T? l? can ngh?o
 gen can_ngheo = 0
-replace can_ngheo = 100 if thubq<=450 * 1.3 & ttnt==1
-replace can_ngheo = 100 if thubq<=360 * 1.3& ttnt==2
+replace can_ngheo = 100 if thubq<=370 * 1.3 & ttnt==1
+replace can_ngheo = 100 if thubq<=290 * 1.3& ttnt==2
 
 // T? l? d?n t?c thi?u s? ngh?o/ t?ng s? ng??i ngh?o
 gen dt_ngheo = tyle_ngheo
@@ -279,16 +268,16 @@ label define quint
 
 // T? l? ?i h?c ??ng tu?i
 * T? l? h?c ti?u  h?c ??ng tu?i
-gen dung_tieuhoc = 0 if age >=6 & age <=10
-recode dung_tieuhoc (0=1) if edu_now >=1 & edu_now <=5  // ?ang h?c t? l?p 1 ??n l?p 5
+gen dung_tieuhoc = 0 if age >=7 & age <=11
+recode dung_tieuhoc (0=1) if edu >=1 & edu <=5
 replace dung_tieuhoc = dung_tieuhoc *100 
 * T? l? h?c trung h?c c? s???ng tu?i
-gen dung_thcs = 0 if age >=11 & age <=14
-recode dung_thcs (0=1) if edu_now >=6 & edu_now <=9
+gen dung_thcs = 0 if age >=12 & age <=15
+recode dung_thcs (0=1) if edu >=6 & edu <=9
 replace dung_thcs = dung_thcs *100 
 * T? l? h?c trung h?c ph? th?ng ??ng tu?i
-gen dung_thpt = 0 if age >=15 & age <=17
-recode dung_thpt (0=1) if edu_now >=10 & edu_now <=12
+gen dung_thpt = 0 if age >=16 & age <=18
+recode dung_thpt (0=1) if edu >=10 & edu <=12
 replace dung_thpt = dung_thpt *100 
 
 
@@ -303,85 +292,27 @@ label define quint_ct
 5	"Nh?m chi ti?u cao nh?t";
 #delimit cr
 
-merge 1:1 $id using "$data10\muc4a5.dta" 
-keep if _merge ==3
-drop _merge
-
-gen trocapTn=0
-replace trocapTn=1 if m4ac28a~=.&m4ac28a>0
-lab var trocapTn "Tro cap that nghiep"
-
-gen trocapTv=0
-replace trocapTv=1 if m4ac28b~=.&m4ac28b>0
-lab var trocapTv "Tro cap thoi viec mot lan"
-
-gen nghihuu=0
-replace nghihuu=1 if m4ac28c ~= . & m4ac28c>0
-lab var nghihuu "Nghi huu binh thuong o do tuoi quy dinh"
-
-gen nghihuusom=0
-replace nghihuusom=1 if m4ac28d~=.&m4ac28d>0
-lab var nghihuusom "Nghi huu binh thuong o do tuoi quy dinh"
-
-gen matsuc=0
-replace matsuc=1 if  m4ac28e~=.&m4ac28e>0
-lab var matsuc "Tro cap mat suc lao dong"
-
-gen huutri=0
-replace huutri=1 if nghihuu==1|nghihuusom==1
-lab var huutri "Huutri"
-
 // N??c s?ch
 gen  nuocsach = 100
-replace nuocsach = 0 if m7c14 == 5 | m7c14 ==7 | m7c14 ==10
+replace nuocsach = 0 if m7c26 == 6 | m7c26 ==8 | m7c26 ==13 | m7c26 ==14
 // Nh? ?
-gen cot=m7c3
-recode cot 1/3=1 4/5=0
-gen mai=m7c4
-recode mai 1/2=1 3/5=0
-gen tuong=m7c5
-recode tuong 1/3=1 4/6=0
-egen loainha=rsum(cot mai tuong) 
-
+gen loainha =  m7c3
   #delimit;
 label define loainha
-3 "Nh? ki?n c?"
-2 "Nh? b?n ki?n c?"
-1 "Nh? thi?u ki?n c?"
-0 "Nh? ??n s?" ;
+1" Nh? bi?t th?"
+2 "Nh? ki?n c? kh?p k?n"
+3 "Nh? ki?n c? kh?ng kh?p k?n"
+4 "Nh? b?n ki?n c?"
+5 "Nh? t?m v? kh?c";
 #delimit cr
 
-gen bhxh = m4ac13c
-label define bhxh 1" C?" 2 "Kh?ng"
-
-// Gi?i t?nh c?a ch? h?
-gen temp = 1 if quanhe ==1 & gender ==1
-replace temp = 2 if quanhe ==1 & gender ==2
-egen headsex = min(temp), by( tinh huyen xa diaban hoso)
-drop temp
-
-  #delimit;
-label define headsex
-1"Ch? h? nam "
-2 "Ch? h? n?";
-#delimit cr
-
-gen dttsheadsex = headsex
-replace dttsheadsex = . if dantoc ==1 | dantoc ==4
-  #delimit;
-label define dttsheadsex
-1"Ch? h? nam "
-2 "Ch? h? n?";
-#delimit cr
-
-// bi?n gi? l?i
-global list_all region6 age agegroup5_new marital_status gender  quanhe train  edu yearschool edu_now highest_degree degree_now economic_sector indus1 nganh_N_C_D /// 
+global list_all region6 age agegroup5_new marital_status gender  quanhe train  edu yearschool highest_degree degree_now economic_sector indus1 nganh_N_C_D /// 
 occup1 ttnt  dantoc hhincome wage hhwage hhsize lamviec pov_lines quint quint_ct ///
-hhexp_edu hhexp_healthcare hhexp_food hhexp_nonfood hhexp_other hhexp_durables hhexpenditure av_exp_healthcare chibq  thubq ///
-tyle_ngheo  can_ngheo tyle_ngheo_new dung_tieuhoc dung_thcs dung_thpt dihoc nuocsach dt_ngheo educex_2 loainha bhxh headsex dttsheadsex reg8 monthly_wageA yearly_wageA
+hhexp_edu hhexp_healthcare hhexp_food hhexp_nonfood hhexp_other hhexp_durables hhexpenditure av_exp_healthcare hhexp_assets hhexp_housing chibq  thubq ///
+tyle_ngheo can_ngheo dung_tieuhoc dung_thcs dung_thpt dihoc nuocsach dt_ngheo  educex_2 loainha reg8 yearly_wageA
 // bi?n g?n nh?n
 global list_label marital_status  gender  quanhe highest_degree degree_now train  region6 indus1 nganh_N_C_D occup1 ///
-economic_sector  edu_now agegroup5_new quint quint_ct loainha reg8 train1
+economic_sector  agegroup5_new quint quint_ct loainha reg8
 foreach name in $list_label {
 recode `name' ( .=99)
 label values `name' `name'
@@ -413,7 +344,7 @@ label var tyle_ngheo "T? l? ngh?o"
 label var dt_ngheo  "T? l? h? d?n t?c thi?u s? trong h? ngh?o"
 label var educex_2 "Chi ti?u gi?o d?c"
 
-order $list_all $id weight
+order $list_all $id weight tinh_old
 do "F:\Dropbox\dofile\labels\label_dantoc.do"
 quiet compress
-save "$temp\vhlss2010.dta" , replace
+save $temp\vhlss2008.dta , replace
