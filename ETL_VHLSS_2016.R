@@ -29,7 +29,9 @@ qcut <- function(x, nbr_bin = 5) {
   
 }
 
-source('D:/R/VHLSS/labels.R')
+# source('D:/R/VHLSS/labels.R')
+# In windows should using eval rather than source
+eval(parse("labels.R", encoding = "UTF-8"))
 
 # Import all file
 file_vhlss_2016 <- Sys.glob("VHLSS2016/*.dta")
