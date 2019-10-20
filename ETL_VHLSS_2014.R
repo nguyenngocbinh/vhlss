@@ -30,7 +30,7 @@ qcut <- function(x, nbr_bin = 5) {
 }
 
 # source('D:/R/VHLSS/labels.R')
-# In windows should using eval rather than source
+# In windows should using eval rather better than source
 eval(parse("labels.R", encoding = "UTF-8"))
 
 # Import all file
@@ -42,10 +42,10 @@ names(dt) <- tolower(names(dt))
 
 # Merge các file hộ với nhau
 ho <- dt$ho1 %>%
-  inner_join(dt$ho2) %>%
-  inner_join(dt$ho3) %>%
-  inner_join(dt$ho4) %>%
-  inner_join(dt$muc7)
+  left_join(dt$ho2) %>%
+  left_join(dt$ho3) %>%
+  left_join(dt$ho4) %>%
+  left_join(dt$muc7)
 
 # Tạo biến các mục chi tiêu hộ gia đình
 ho %<>%
@@ -77,9 +77,9 @@ ho %<>%
 
 # Ghep các mục thành viên hộ
 dt_join <- dt$muc1a %>%
-  inner_join(dt$muc2a) %>%
-  inner_join(dt$muc4a) %>%
-  inner_join(dt$muc2x) %>%
+  left_join(dt$muc2a) %>%
+  left_join(dt$muc4a) %>%
+  left_join(dt$muc2x) %>%
   inner_join(ho) %>%
   inner_join(dt$wt2014)
 
