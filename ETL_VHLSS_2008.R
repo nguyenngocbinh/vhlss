@@ -30,7 +30,7 @@ qcut <- function(x, nbr_bin = 5) {
 }
 
 # source('D:/R/VHLSS/labels.R')
-# In windows should using eval rather than source
+# In windows should using eval rather better than source
 eval(parse("labels.R", encoding = "UTF-8"))
 
 # Import all file
@@ -84,7 +84,7 @@ ho %<>%
 
 # Ghep các mục thành viên hộ
 dt_join <- dt$muc123a %>%
-  inner_join(dt$muc4a) %>%
+  left_join(dt$muc4a) %>%
   inner_join(dt$hhexpe08) %>%
   inner_join(ho)
 # %>%  inner_join(dt$weight08new4)
@@ -183,7 +183,7 @@ thanh_vien <- dt_join %>%
       highest_degree == 11 ~ edu + 9,
       TRUE ~ edu
     ),
-    tinh = f_recode_tinh(tinh),
+    tinh = f_convert_tinh_old_to_new(tinh),
     reg6 = f_reg6(tinh),
     reg8 = f_reg8(tinh),
     reg_hn_hcm = f_reg_hn_hcm(tinh),
