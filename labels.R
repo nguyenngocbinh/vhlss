@@ -1,3 +1,23 @@
+# Author: Nguyễn Ngọc Bình 
+# First: 22/10/2019        
+# --------------------------
+
+f_age_grp5 <- function(age){
+  grp <- case_when(
+    age >= 0 & age <= 14 ~ '0 - 14',
+    age <= 19 ~ '15 - 19',
+    age <= 24 ~ '20 - 24',
+    age <= 29 ~ '25 - 19',
+    age <= 34 ~ '30 - 34',
+    age <= 39 ~ '35 - 39',
+    age <= 44 ~ '40 - 44',
+    age <= 49 ~ '45 - 49',
+    age <= 54 ~ '50 - 54',
+    age <= 59 ~ '55 - 59',
+    age <= 64 ~ '60 - 64',
+    age >= 65 ~ '65+')
+}
+
 f_reg6 <- function(tinh){
   reg <- case_when(tinh == 1 | tinh == 22 | tinh >= 26 & tinh <=37 ~ 'Đồng bằng sông Hồng',
                    tinh == 24 | tinh == 25 | tinh >= 2 & tinh <= 20 ~ 'Trung du miền núi phía bắc',
@@ -56,9 +76,16 @@ f_indus1 <- function(indus2){
                      indus2 >=94 & indus2 <=96 ~ "19. HĐ dịch vụ khác",
                      indus2 >=97 & indus2 <=98 ~ "20. HĐ làm thuê các công việc trong các hộ gia đình",
                      indus2 ==99 ~ "21. HĐ của các tổ chức và cơ quan quốc tế",
-                     TRUE ~ "KXĐ")
+                     TRUE ~ "Missing")
 }
 
+f_nganh_n_c_d <- function(indus2){
+  grp <- case_when(indus2 >=1 & indus2 <=3 ~ 'Nông nghiệp',
+                   indus2 >=5 & indus2 <=35 | indus2 >=41 & indus2 <=43 ~ 'Công nghiệp',
+                   indus2 >=36 & indus2 <=39 | indus2 >=45 & indus2 <=99 ~ 'Dịch vụ',
+                   TRUE ~ 'Missing'
+                   )
+}
 #=============================================================================
 
 f_occup1 <- function(occup2){
