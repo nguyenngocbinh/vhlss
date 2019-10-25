@@ -1,5 +1,6 @@
 # Author: Nguyễn Ngọc Bình 
-# First: 22/10/2019        
+# First: 22/10/2019      
+# Update: 25/20/2019
 # --------------------------
 
 f_age_grp5 <- function(age){
@@ -15,7 +16,8 @@ f_age_grp5 <- function(age){
     age <= 54 ~ '50 - 54',
     age <= 59 ~ '55 - 59',
     age <= 64 ~ '60 - 64',
-    age >= 65 ~ '65+')
+    age >= 65 ~ '65+',
+    TRUE ~ "Missing")
 }
 
 f_reg6 <- function(tinh){
@@ -84,7 +86,7 @@ f_nganh_n_c_d <- function(indus2){
                    indus2 >=5 & indus2 <=35 | indus2 >=41 & indus2 <=43 ~ 'Công nghiệp',
                    indus2 >=36 & indus2 <=39 | indus2 >=45 & indus2 <=99 ~ 'Dịch vụ',
                    TRUE ~ 'Missing'
-                   )
+  )
 }
 #=============================================================================
 
@@ -98,7 +100,8 @@ f_occup1 <- function(occup2){
                   occup2 >=71 & occup2 <=75 ~ "7. LĐ thủ công và các nghề nghiệp có liên quan khác",
                   occup2 >=81 & occup2 <=83 ~ "8. Thợ lắp ráp và vận hành máy móc, thiết bị",
                   occup2 >=91 & occup2 <=96 ~ "9. Lao động giản đơn",
-                  occup2 >=0 & occup2 <=3 ~ "10. Lực lượng quân đội")
+                  occup2 >=0 & occup2 <=3 ~ "10. Lực lượng quân đội",
+                  TRUE ~ "Missing")
 }
 
 f_recode_tinh <- function(x){
@@ -164,5 +167,6 @@ f_recode_tinh <- function(x){
             x == 816 ~ 93,
             x == 819 ~ 94,
             x == 821 ~ 95,
-            x == 823 ~ 96)  
+            x == 823 ~ 96,
+            TRUE ~ 9999999)  
 }
