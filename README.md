@@ -1,11 +1,11 @@
 
 # ETL data for VHLSS 
 
-# Note: In windows should using eval rather than source
+# Note: In windows, code should use eval rather than source
 
 source('D:/R/VHLSS/labels.R') # Should not
 
 eval(parse("labels.R", encoding = "UTF-8")) # Better
 
-# With graphs in rmarkdown is performed well 
+# Graphs in rmarkdown are performed well 
 eval(parse("graphs.R", encoding = "UTF-8"))
